@@ -4,7 +4,7 @@
 #ifdef Q_OS_ANDROID
 QString selectedFileName = "/storage/emulated/0/DetectorData/test.jpg";
 #else
-QString selectedFileName = "D:/QtWork/NCNNDemo/src/test.jpg";
+QString selectedFileName = "D:/QtWork/NCNNProjs/src/test.jpg";
 #endif
 
 #ifdef Q_OS_ANDROID
@@ -14,7 +14,7 @@ extern "C" {
 #endif
 
 JNIEXPORT void JNICALL
-Java_com_amin_NCNNDemo_NCNNDemo_fileSelected(JNIEnv */*env*/,
+Java_com_amin_NCNNProjs_NCNNProjs_fileSelected(JNIEnv */*env*/,
                                              jobject /*obj*/,
                                              jstring results)
 {
@@ -39,6 +39,8 @@ NCNNDlg::NCNNDlg(QWidget *parent)
     showMaximized();
 #endif // Q_OS_ANDROID
 
+//    m_ncnnModel = new DetectorPSENet(this);
+    m_ncnnModel = new YoloV4(this);
 
     QVBoxLayout* mainl = new QVBoxLayout(this);
     QGridLayout* mainLay = new QGridLayout();
@@ -84,7 +86,7 @@ void NCNNDlg::btnClicked(int btnID)
     if(btnID == 0)
     {
         selectedFileName = "#";
-        QAndroidJniObject::callStaticMethod<void>("com/amin/NCNNDemo/NCNNDemo",
+        QAndroidJniObject::callStaticMethod<void>("com/amin/NCNNProjs/NCNNProjs",
                                                   "captureAnImage",
                                                   "()V");
         while(selectedFileName == "#")
@@ -105,7 +107,7 @@ void NCNNDlg::btnClicked(int btnID)
     else if(btnID == 1)
     {
         selectedFileName = "#";
-        QAndroidJniObject::callStaticMethod<void>("com/amin/NCNNDemo/NCNNDemo",
+        QAndroidJniObject::callStaticMethod<void>("com/amin/NCNNProjs/NCNNProjs",
                                                   "openAnImage",
                                                   "()V");
 
@@ -132,54 +134,11 @@ void NCNNDlg::btnClicked(int btnID)
         qDebug()<<"open img from: "<<selectedFileName;
         //处理图片
         Mat frame = imread(selectedFileName.toStdString());
-        Mat frame2Detect = frame.clone();
-        if(!detector.hasLoadNet())
+        if(!m_ncnnModel->hasLoadNet())
             return;
-        map<int, vector<Point>> contoursMap;
-        clock_t start, finish;
-        start = clock();
-        double model_time = 0;
-        if(detector.detect(frame2Detect, contoursMap, model_time))//处理图片
+
+        if(m_ncnnModel->predict(frame))//处理图片
         {
-            float h_scale = frame.rows * 1.0 / frame2Detect.rows;
-            float w_scale = frame.cols * 1.0 / frame2Detect.cols;
-            qDebug()<<"h_scale: "<<h_scale;
-            qDebug()<<"w_scale: "<<w_scale;
-            putText(frame, to_string(model_time), Point(frame.cols, 50), FONT_HERSHEY_SIMPLEX, 2, (255, 0, 0), 2);
-
-            map<int, vector<cv::Point>>::iterator iter;//定义一个迭代指针iter
-            for(iter=contoursMap.begin(); iter!=contoursMap.end(); iter++)
-            {
-                if(iter->first == 0)
-                    continue;
-
-                vector<cv::Point> pts = iter->second;
-
-                RotatedRect rect = minAreaRect(pts);
-                rect.size.width = rect.size.width * w_scale;
-                rect.size.height = rect.size.height * h_scale;
-                rect.center.x = rect.center.x * w_scale;
-                rect.center.y = rect.center.y * h_scale;
-
-                Point2f cornerPts[4];
-                rect.points(cornerPts);//外接矩形的4个顶点
-                for (int i = 0; i < 4; i++)//绘制外接矩形
-                {
-                    line(frame, cornerPts[i], cornerPts[(i + 1) % 4], cv::Scalar(0, 255, 0), 2);
-                }
-            }
-            finish = clock();
-            qDebug()<<"Detect all time: "<<(double)(finish - start) / CLOCKS_PER_SEC;
-
-            /// show segmentation map in image, If necessary, uncomment them
-            //            cv::resize(frame2Detect, frame2Detect, frame.size(), 0, 0);
-            //            for (int y=0; y < frame2Detect.rows; ++y)
-            //                for (int x=0; x < frame2Detect.cols; ++x) {
-            //                    int idx = frame2Detect.at<uchar>(y, x);
-            //                    if (idx == 0) continue;
-            //                    frame.at<Vec3b>(y, x)[1] += 50;
-            //                }
-
             outputImg = frame.clone();
 
             QImage img = MatToQImage(frame);
@@ -240,52 +199,11 @@ void NCNNDlg::btnClicked(int btnID)
         if(frame.empty() || frame.cols == 0)
             return;
         Mat frame2Detect = frame.clone();
-        if(!detector.hasLoadNet())
+        if(!m_ncnnModel->hasLoadNet())
             return;
-        map<int, vector<Point>> contoursMap;
-        clock_t start, finish;
-        start = clock();
 
-        if(detector.detect(frame2Detect, contoursMap))//处理图片
+        if(m_ncnnModel->predict(frame))//处理图片
         {
-            float h_scale = frame.rows * 1.0 / frame2Detect.rows;
-            float w_scale = frame.cols * 1.0 / frame2Detect.cols;
-            qDebug()<<"h_scale: "<<h_scale;
-            qDebug()<<"w_scale: "<<w_scale;
-
-            map<int, vector<cv::Point>>::iterator iter;//定义一个迭代指针iter
-            for(iter=contoursMap.begin(); iter!=contoursMap.end(); iter++)
-            {
-                if(iter->first == 0)
-                    continue;
-
-                vector<cv::Point> pts = iter->second;
-
-                RotatedRect rect = minAreaRect(pts);
-                rect.size.width = rect.size.width * w_scale;
-                rect.size.height = rect.size.height * h_scale;
-                rect.center.x = rect.center.x * w_scale;
-                rect.center.y = rect.center.y * h_scale;
-
-                Point2f cornerPts[4];
-                rect.points(cornerPts);//外接矩形的4个顶点
-                for (int i = 0; i < 4; i++)//绘制外接矩形
-                {
-                    line(frame, cornerPts[i], cornerPts[(i + 1) % 4], cv::Scalar(0, 255, 0), 2);
-                }
-            }
-            finish = clock();
-            qDebug()<<"Detect all time: "<<(double)(finish - start) / CLOCKS_PER_SEC;
-
-            /// show segmentation map in image, If necessary, uncomment them
-            //            cv::resize(frame2Detect, frame2Detect, frame.size(), 0, 0);
-            //            for (int y=0; y < frame2Detect.rows; ++y)
-            //                for (int x=0; x < frame2Detect.cols; ++x) {
-            //                    int idx = frame2Detect.at<uchar>(y, x);
-            //                    if (idx == 0) continue;
-            //                    frame.at<Vec3b>(y, x)[1] += 50;
-            //                }
-
             outputImg = frame.clone();
 
             QImage img = MatToQImage(frame);

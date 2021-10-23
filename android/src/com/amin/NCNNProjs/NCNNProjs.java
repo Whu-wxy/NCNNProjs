@@ -1,4 +1,4 @@
-package com.amin.NCNNDemo;
+package com.amin.NCNNProjs;
 
 import org.qtproject.qt5.android.bindings.QtApplication;
 import org.qtproject.qt5.android.bindings.QtActivity;
@@ -26,7 +26,7 @@ import java.util.List;
 import android.provider.DocumentsContract;
 import     android.content.ContentUris;
 
-public class NCNNDemo extends QtActivity
+public class NCNNProjs extends QtActivity
 {
 
     public static native void fileSelected(String fileName);
@@ -35,9 +35,9 @@ public class NCNNDemo extends QtActivity
     public String lastCameraFileUri;
     static final int REQUEST_CAPTURE_IMAGE = 2;
 
-    private static NCNNDemo m_instance;
+    private static NCNNProjs m_instance;
 
-    public NCNNDemo()
+    public NCNNProjs()
     {
         m_instance = this;
     }
@@ -282,8 +282,8 @@ public class NCNNDemo extends QtActivity
         catch (IOException ex)
         {
         // Error occurred while creating the File
-            Toast.makeText(NCNNDemo.this, ex.getLocalizedMessage(), Toast.LENGTH_LONG).show();
-            Toast.makeText(NCNNDemo.this, ex.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(NCNNProjs.this, ex.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(NCNNProjs.this, ex.getMessage(), Toast.LENGTH_LONG).show();
         }
         // Continue only if the File was successfully created
         if (photoFile != null)
@@ -297,7 +297,7 @@ public class NCNNDemo extends QtActivity
     }
     else
     {
-        Toast.makeText(NCNNDemo.this, "Problems with your camera?!", Toast.LENGTH_SHORT).show();
+        Toast.makeText(NCNNProjs.this, "Problems with your camera?!", Toast.LENGTH_SHORT).show();
     }
  }
 

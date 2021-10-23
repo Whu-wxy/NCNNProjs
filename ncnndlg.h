@@ -30,7 +30,10 @@
 #include "imgutils.h"
 #include "androidsetup.h"
 #include "time.h"
-#include "detector.h"
+#include "ncnnmodelbase.h"
+#include "detectorpsenet.h"
+#include "YoloV5CustomLayer.h"
+#include "YoloV4.h"
 
 #include "ncnn/net.h"
 #include "ncnn/mat.h"
@@ -57,7 +60,7 @@ private:
     QPushButton* processBtn;
     QPushButton* saveBtn;
 
-    Detector    detector;
+    ncnnModelBase*  m_ncnnModel;
 
     Mat     outputImg;
 

@@ -5,6 +5,7 @@
 #-------------------------------------------------
 
 QT       += core gui
+CONFIG += c++11
 
 android{
 QT       += androidextras
@@ -14,6 +15,12 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = NCNNProjs
 TEMPLATE = app
+
+#QMAKE_CFLAGS += -fno-rtti -fno-exceptions
+#QMAKE_CXXFLAGS += -fno-rtti -fno-exceptions
+#QMAKE_CXXFLAGS -= NCNN_DISABLE_RTTI
+#QMAKE_CXXFLAGS += -D NCNN_DISABLE_RTTI=OFF
+#QMAKE_CFLAGS += -D NCNN_DISABLE_RTTI=OFF
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
@@ -28,17 +35,25 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 
 SOURCES += \
+    YoloV4.cpp \
+    YoloV5.cpp \
+    YoloV5CustomLayer.cpp \
+    detectorpsenet.cpp \
         main.cpp \
         ncnndlg.cpp \
     imgutils.cpp \
     androidsetup.cpp \
-    detector.cpp
+    ncnnmodelbase.cpp \
 
 HEADERS += \
+    YoloV4.h \
+    YoloV5.h \
+    YoloV5CustomLayer.h \
+    detectorpsenet.h \
         ncnndlg.h \
     imgutils.h \
     androidsetup.h \
-    detector.h
+    ncnnmodelbase.h
 
 CONFIG += mobility
 MOBILITY =
@@ -50,28 +65,27 @@ QMAKE_CXXFLAGS += -fopenmp
 QMAKE_LFLAGS += -fopenmp
 LIBS += -fopenmp # -lgomp
 
-LIBS += -L$$PWD/../../ncnn-lib/ncnn-20210720-android/armeabi-v7a/lib -lncnn
-INCLUDEPATH += $$PWD/../../ncnn-lib/ncnn-20210720-android/armeabi-v7a/include
-DEPENDPATH += $$PWD/../../ncnn-lib/ncnn-20210720-android/armeabi-v7a/include
-PRE_TARGETDEPS += $$PWD/../../ncnn-lib/ncnn-20210720-android/armeabi-v7a/lib/libncnn.a
+NCNN_DIR = D:/ncnn-lib/ncnn-20210720-android-vulkan-shared/armeabi-v7a
+# D:/ncnn-lib/ncnn-20210720-android/armeabi-v7a
+# D:/ncnn-lib/android_rtti
+# D:/ncnn-lib/ncnn-20210720-android-vulkan-shared/armeabi-v7a
+LIBS += -L$$NCNN_DIR/lib -lncnn
+INCLUDEPATH += $$NCNN_DIR/include
+DEPENDPATH += $$NCNN_DIR/include
+PRE_TARGETDEPS += $$NCNN_DIR/lib/libncnn.so  # .so .a
 
 
-ANDROID_OPENCV = D:/opencv-4.5.3-android-sdk/OpenCV-android-sdk/sdk/native   # D:/OpenCV-android-sdk/sdk/native
-
+ANDROID_OPENCV = D:/opencv-4.5.3-android-sdk/OpenCV-android-sdk/sdk/native
+# D:/ncnn-lib/opencv-mobile-4.5.3-android/sdk/native
+# D:/opencv-4.5.3-android-sdk/OpenCV-android-sdk/sdk/native
+# D:/OpenCV-android-sdk/sdk/native (gcc)
 INCLUDEPATH += \
 $$ANDROID_OPENCV/jni/include/opencv    \
 $$ANDROID_OPENCV/jni/include/opencv2    \
 $$ANDROID_OPENCV/jni/include
 
 LIBS += $$ANDROID_OPENCV/libs/armeabi-v7a/libopencv_java4.so \
-#$$ANDROID_OPENCV/staticlibs/armeabi-v7a/libopencv_ml.a \
-#$$ANDROID_OPENCV/staticlibs/armeabi-v7a/libopencv_objdetect.a \
-#$$ANDROID_OPENCV/staticlibs/armeabi-v7a/libopencv_calib3d.a \
-#$$ANDROID_OPENCV/staticlibs/armeabi-v7a/libopencv_video.a \
-#$$ANDROID_OPENCV/staticlibs/armeabi-v7a/libopencv_features2d.a \
 $$ANDROID_OPENCV/staticlibs/armeabi-v7a/libopencv_highgui.a \
-#$$ANDROID_OPENCV/staticlibs/armeabi-v7a/libopencv_dnn.a  \
-#$$ANDROID_OPENCV/staticlibs/armeabi-v7a/libopencv_flann.a \
 $$ANDROID_OPENCV/staticlibs/armeabi-v7a/libopencv_imgproc.a \
 $$ANDROID_OPENCV/staticlibs/armeabi-v7a/libopencv_imgcodecs.a \
 $$ANDROID_OPENCV/staticlibs/armeabi-v7a/libopencv_core.a     \
@@ -82,8 +96,13 @@ $$ANDROID_OPENCV/3rdparty/libs/armeabi-v7a/liblibjpeg-turbo.a \
 #$$ANDROID_OPENCV/3rdparty/libs/armeabi-v7a/liblibjasper.a \
 #$$ANDROID_OPENCV/3rdparty/libs/armeabi-v7a/libtbb.a \
 
-data.files += src/psenet_lite_mbv2.bin
-data.files += src/psenet_lite_mbv2.param
+#LIBS += $$ANDROID_OPENCV/staticlibs/armeabi-v7a/libopencv_highgui.a \
+#$$ANDROID_OPENCV/staticlibs/armeabi-v7a/libopencv_imgproc.a \
+#$$ANDROID_OPENCV/staticlibs/armeabi-v7a/libopencv_core.a
+
+#  psenet_lite_mbv2  yolov4-tiny-opt yolo-fastest-opt MobileNetV2-YOLOv3-Nano-coco
+data.files += src/yolo-fastest-opt.bin
+data.files += src/yolo-fastest-opt.param
 data.files += src/test.jpg
 data.path = /assets/dst/
 INSTALLS += data
@@ -113,7 +132,8 @@ PRE_TARGETDEPS += $$PWD/../../ncnn-lib/winlib/libncnn.a
 
 contains(ANDROID_TARGET_ARCH,armeabi-v7a) {
     ANDROID_EXTRA_LIBS = \
-        $$ANDROID_OPENCV/libs/armeabi-v7a/libopencv_java4.so
+        $$ANDROID_OPENCV/libs/armeabi-v7a/libopencv_java4.so \
+        $$NCNN_DIR/lib/libncnn.so
 }
 
 DISTFILES += \
@@ -124,7 +144,7 @@ DISTFILES += \
     android/build.gradle \
     android/gradle/wrapper/gradle-wrapper.properties \
     android/gradlew.bat \
-    android/src/com/amin/NCNNDemo/NCNNDemo.java
+    android/src/com/amin/NCNNProjs/NCNNProjs.java
 
 ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android
 

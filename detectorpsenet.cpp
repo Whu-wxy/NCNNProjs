@@ -1,97 +1,19 @@
-#include "detector.h"
+#include "DetectorPSENet.h"
 #include <QFile>
 #include <androidsetup.h>
 
-Detector::Detector(QObject *parent) : QObject(parent)
+DetectorPSENet::DetectorPSENet(QObject *parent) : ncnnModelBase("psenet_lite_mbv2", parent)
 {
-    bLoad = false;
-
-    moveFiles();
-#ifdef Q_OS_ANDROID
-    AndroidSetup setup;
-    QString dataDir = setup.getAppDataDir();
-#else
-    QString dataDir = "D:/QtWork/NCNNDemo/src/";
-#endif // Q_OS_ANDROID
-
-    QString modelDir(dataDir+"/psenet_lite_mbv2.param");
-
-    if(QFile::exists(modelDir))
-    {
-        QByteArray ba = modelDir.toLatin1();
-        char *modeldir = ba.data();
-
-        int res = net.load_param(modeldir);  //鍔犺浇妯″瀷
-        qDebug()<<"param consumed: "<<res;
-
-        modelDir = dataDir+"/psenet_lite_mbv2.bin";
-
-        ba = modelDir.toLatin1();
-        modeldir = ba.data();
-        int consumed = net.load_model(modeldir);    //"assets:/dst/psenet_lite_mbv2.bin"
-        qDebug()<<"bin consumed: "<<consumed;
-
-        bLoad = true;
-    }
-    else
-    {
-        qDebug()<<"weights file not exist";
-        bLoad = false;
-    }
-}
-
-Detector::~Detector()
-{
-    net.clear(); //鍗歌浇妯″瀷
 
 }
 
-//浠巃ssets绉诲姩鍒版櫘閫氳矾寰勪笅
-bool Detector::moveFiles()
+DetectorPSENet::~DetectorPSENet()
 {
-#ifdef Q_OS_ANDROID
-    AndroidSetup setup;
-    QString dataDir = setup.getAppDataDir();
-    qDebug()<<"data Dir:"<<dataDir;
 
-    if(QFile::exists("assets:/dst/psenet_lite_mbv2.bin"))
-        qDebug()<<"psenet_lite_mbv2.bin exist";
-    else
-        qDebug()<<"psenet_lite_mbv2.bin not exist";
-
-    if(QFile::exists("assets:/dst/psenet_lite_mbv2.param"))
-        qDebug()<<"psenet_lite_mbv2.param exist";
-    else
-        qDebug()<<"psenet_lite_mbv2.param not exist";
-
-    bool bMove = true;
-    QString dstName = dataDir + "/psenet_lite_mbv2.bin";
-    if(!QFile::copy("assets:/dst/psenet_lite_mbv2.bin", dstName))
-    {
-        qDebug()<<"copy psenet_lite_mbv2.bin fail";
-        bMove = false;
-    }
-
-    dstName = dataDir + "/psenet_lite_mbv2.param";    //psenet_lite_mbv2    psenet_lite_mbv2
-    if(!QFile::copy("assets:/dst/psenet_lite_mbv2.param", dstName))
-    {
-        qDebug()<<"copy psenet_lite_mbv2.param fail";
-        bMove = false;
-    }
-
-    dstName = dataDir + "/test.jpg";
-    if(!QFile::copy("assets:/dst/test.jpg", dstName))
-    {
-        qDebug()<<"copy test.jpg fail";
-        bMove = false;
-    }
-
-    qDebug()<<"move status:"<<bMove;
-    return bMove;
-#endif // Q_OS_ANDROID
 }
 
-bool Detector::detect(Mat & frame, map<int, vector<Point>>& contours_map, double& model_time)
+
+bool DetectorPSENet::predict(Mat & frame)
 {
     clock_t start=0, finish=0;
 
@@ -114,9 +36,14 @@ bool Detector::detect(Mat & frame, map<int, vector<Point>>& contours_map, double
     qDebug()<<"ncnn in H: "<<in.h;
     qDebug()<<"ncnn in W: "<<in.w;
 
+//    net.set_vulkan_device(0);
+
     ncnn::Extractor extractor = net.create_extractor();
     extractor.set_light_mode(true);//鍚敤鏃讹紝涓棿Blob灏嗚鍥炴敹
-    //extractor.set_num_threads(4); //澶氱嚎绋嬪姞閫熺殑寮€鍏筹紝璁剧疆绾跨▼鏁拌兘鍔犲揩璁＄畻
+    extractor.set_num_threads(1); //澶氱嚎绋嬪姞閫熺殑寮€鍏筹紝璁剧疆绾跨▼鏁拌兘鍔犲揩璁＄畻
+
+////1.    extractor.set_vulkan_compute(true);
+////2.    net.opt.use_vulkan_compute = ncnn::get_gpu_count() > 0;
 
     // Android涓敤clock()璁℃椂涓嶅噯纭紝瑕佺敤ncnn::get_current_time()
     start = clock();
@@ -144,38 +71,62 @@ bool Detector::detect(Mat & frame, map<int, vector<Point>>& contours_map, double
     qDebug()<<"out C: "<<out.c;
 
     qDebug()<<"model time: "<<(double)(finish - start) / CLOCKS_PER_SEC;
-    model_time = (double)(finish - start) / CLOCKS_PER_SEC;
+    double model_time = (double)(finish - start) / CLOCKS_PER_SEC;
     qDebug()<<"ncnn model time: "<<(double)(ncnnfinish - ncnnstart)/1000;
     qDebug()<<"ncnn";
 
-    float *outdata = (float *) out.data;
-    if(outdata != nullptr)
-    {
-        frame = Mat(out.h, out.w, CV_8UC1, Scalar(0));
+//    float *outdata = (float *) out.data;
+//    if(outdata != nullptr)
+//    {
+//        frame = Mat(out.h, out.w, CV_8UC1, Scalar(0));
 
-        for(int i=0; i<frame.rows; i++)
-        {
-            for(int j=0; j<frame.cols; j++)
-            {
-                if (outdata[i * out.w + j + out.w*out.h*0] >= 0.3)
-                    frame.at<uchar>(i, j) = 255;
-                else
-                    frame.at<uchar>(i, j) = 0;
-            }
-        }
-    }
+//        for(int i=0; i<frame.rows; i++)
+//        {
+//            for(int j=0; j<frame.cols; j++)
+//            {
+//                if (outdata[i * out.w + j + out.w*out.h*0] >= 0.3)
+//                    frame.at<uchar>(i, j) = 255;
+//                else
+//                    frame.at<uchar>(i, j) = 0;
+//            }
+//        }
+//    }
 
     start = clock();
-    pse_decode(out, contours_map, 0.5, 5, 2);  //min_map_id=0-5,濡傛灉灏忔枃鏈娴嬩笉鍒帮紝鍙互灏濊瘯鎶婅繖涓暟澧炲ぇ
+    map<int, vector<cv::Point>> contoursMap;
+    pse_decode(out, contoursMap, 0.5, 5, 2);  //min_map_id=0-5,濡傛灉灏忔枃鏈娴嬩笉鍒帮紝鍙互灏濊瘯鎶婅繖涓暟澧炲ぇ
     finish = clock();
     qDebug()<<"pse time: "<<(double)(finish - start) / CLOCKS_PER_SEC;
+
+
+    putText(frame, to_string(model_time), Point(frame.cols/2, frame.rows/2), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 255, 0), 1);
+
+    map<int, vector<cv::Point>>::iterator iter;//定义一个迭代指针iter
+    for(iter=contoursMap.begin(); iter!=contoursMap.end(); iter++)
+    {
+        if(iter->first == 0)
+            continue;
+
+        vector<cv::Point> pts = iter->second;
+
+        RotatedRect rect = minAreaRect(pts);
+        Point2f cornerPts[4];
+        rect.points(cornerPts);//外接矩形的4个顶点
+        for (int i = 0; i < 4; i++)//绘制外接矩形
+        {
+            line(frame, cornerPts[i], cornerPts[(i + 1) % 4], cv::Scalar(0, 255, 0), 2);
+        }
+    }
+    finish = clock();
+    qDebug()<<"Detect all time: "<<(double)(finish - start) / CLOCKS_PER_SEC;
+
 
     return true;
 }
 
 
 // Code from https://link.zhihu.com/?target=https%3A//github.com/ouyanghuiyu/chineseocr_lite/blob/master/ncnn_project/ocr/src/ocr.cpp
-void Detector::pse_decode(ncnn::Mat& features,
+void DetectorPSENet::pse_decode(ncnn::Mat& features,
                           map<int, vector<Point>>& contours_map,
                           const float thresh,
                           const float min_area, int min_map_id)
@@ -293,52 +244,3 @@ void Detector::pse_decode(ncnn::Mat& features,
 }
 
 
-void Detector::pretty_print(const ncnn::Mat& m)
-{
-    for (int q=0; q<m.c; q++)
-    {
-        const float* ptr = m.channel(5);
-        for (int y=0; y<m.h; y++)
-        {
-            for (int x=0; x<m.w; x++)
-            {
-                printf("%f ", ptr[x]);
-            }
-            ptr += m.w;
-            printf("\n");
-        }
-        printf("------------------------\n");
-    }
-}
-
-Mat Detector::resize_img(cv::Mat src, int long_size)
-{
-    int w = src.cols;
-    int h = src.rows;
-    // std::cout<<"鍘熷浘灏哄 (" << w << ", "<<h<<")"<<std::endl;
-    float scale = 1.f;
-    if (w > h)
-    {
-        scale = (float)long_size / w;
-        w = long_size;
-        h = h * scale;
-    }
-    else
-    {
-        scale = (float)long_size / h;
-        h = long_size;
-        w = w * scale;
-    }
-    if (h % 32 != 0)
-    {
-        h = (h / 32 + 1) * 32;
-    }
-    if (w % 32 != 0)
-    {
-        w = (w / 32 + 1) * 32;
-    }
-    // std::cout<<"缂╂斁灏哄 (" << w << ", "<<h<<")"<<std::endl;
-    cv::Mat result;
-    cv::resize(src, result, cv::Size(w, h));
-    return result;
-}

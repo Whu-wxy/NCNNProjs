@@ -15,8 +15,6 @@ DetectorPSENet::~DetectorPSENet()
 
 bool DetectorPSENet::predict(Mat & frame)
 {
-    clock_t start=0, finish=0;
-
     qDebug()<<"origin in H: "<<frame.rows;
     qDebug()<<"origin in W: "<<frame.cols;
 
@@ -36,17 +34,21 @@ bool DetectorPSENet::predict(Mat & frame)
     qDebug()<<"ncnn in H: "<<in.h;
     qDebug()<<"ncnn in W: "<<in.w;
 
-//    net.set_vulkan_device(0);
 
     ncnn::Extractor extractor = net.create_extractor();
     extractor.set_light_mode(true);//鍚敤鏃讹紝涓棿Blob灏嗚鍥炴敹
     extractor.set_num_threads(1); //澶氱嚎绋嬪姞閫熺殑寮€鍏筹紝璁剧疆绾跨▼鏁拌兘鍔犲揩璁＄畻
-
-////1.    extractor.set_vulkan_compute(true);
-////2.    net.opt.use_vulkan_compute = ncnn::get_gpu_count() > 0;
-
+#if NCNN_VULKAN
+    qDebug()<<"gpu count: "<<ncnn::get_gpu_count();
+    if(ncnn::get_gpu_count() > 0)
+    {
+        net.set_vulkan_device(0);
+        ex.set_vulkan_compute(true);
+    }
+    else
+        ex.set_vulkan_compute(false);
+#endif
     // Android涓敤clock()璁℃椂涓嶅噯纭紝瑕佺敤ncnn::get_current_time()
-    start = clock();
     double ncnnstart = ncnn::get_current_time();
 
     int bSuccess = extractor.input("input", in);
@@ -57,23 +59,15 @@ bool DetectorPSENet::predict(Mat & frame)
 
     ncnn::Mat out;
     bSuccess = extractor.extract("out", out);
-    finish = clock();
-    double ncnnfinish = ncnn::get_current_time();
 
     if(bSuccess != 0)
         return false;
 
     qDebug()<<"extractor out";
-
-
     qDebug()<<"out H: "<<out.h;
     qDebug()<<"out W: "<<out.w;
     qDebug()<<"out C: "<<out.c;
 
-    qDebug()<<"model time: "<<(double)(finish - start) / CLOCKS_PER_SEC;
-    double model_time = (double)(finish - start) / CLOCKS_PER_SEC;
-    qDebug()<<"ncnn model time: "<<(double)(ncnnfinish - ncnnstart)/1000;
-    qDebug()<<"ncnn";
 
 //    float *outdata = (float *) out.data;
 //    if(outdata != nullptr)
@@ -92,14 +86,9 @@ bool DetectorPSENet::predict(Mat & frame)
 //        }
 //    }
 
-    start = clock();
     map<int, vector<cv::Point>> contoursMap;
     pse_decode(out, contoursMap, 0.5, 5, 2);  //min_map_id=0-5,濡傛灉灏忔枃鏈娴嬩笉鍒帮紝鍙互灏濊瘯鎶婅繖涓暟澧炲ぇ
-    finish = clock();
-    qDebug()<<"pse time: "<<(double)(finish - start) / CLOCKS_PER_SEC;
 
-
-    putText(frame, to_string(model_time), Point(frame.cols/2, frame.rows/2), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 255, 0), 1);
 
     map<int, vector<cv::Point>>::iterator iter;//定义一个迭代指针iter
     for(iter=contoursMap.begin(); iter!=contoursMap.end(); iter++)
@@ -117,9 +106,11 @@ bool DetectorPSENet::predict(Mat & frame)
             line(frame, cornerPts[i], cornerPts[(i + 1) % 4], cv::Scalar(0, 255, 0), 2);
         }
     }
-    finish = clock();
-    qDebug()<<"Detect all time: "<<(double)(finish - start) / CLOCKS_PER_SEC;
 
+    double ncnnfinish = ncnn::get_current_time();
+    qDebug()<<"ncnn model time: "<<(double)(ncnnfinish - ncnnstart)/1000;
+
+    putText(frame, to_string((double)(ncnnfinish - ncnnstart)/1000), Point(frame.cols/2, frame.rows/2), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 255, 0), 1);
 
     return true;
 }

@@ -39,7 +39,7 @@ NCNNDlg::NCNNDlg(QWidget *parent)
     showMaximized();
 #endif // Q_OS_ANDROID
 
-//    m_ncnnModel = new DetectorPSENet(this);
+    m_curModel = MD_YOLO;
     m_ncnnModel = new YoloV4(this);
 
     QVBoxLayout* mainl = new QVBoxLayout(this);
@@ -55,17 +55,20 @@ NCNNDlg::NCNNDlg(QWidget *parent)
     albumBtn = new QPushButton("相册");
     processBtn = new QPushButton("处理");
     saveBtn = new QPushButton("保存");
+    switchBtn = new QPushButton("YOLO");
     btnGroup = new QButtonGroup(this);
     btnGroup->addButton(captureBtn,0);
     btnGroup->addButton(albumBtn,1);
     btnGroup->addButton(processBtn,2);
-    btnGroup->addButton(saveBtn,3);
+//    btnGroup->addButton(saveBtn,3);
+    btnGroup->addButton(switchBtn,4);
     btnGroup->setExclusive(true);
 
     mainLay->addWidget(captureBtn    ,1,0,1,1);
     mainLay->addWidget(albumBtn      ,1,1,1,1);
     mainLay->addWidget(processBtn    ,1,2,1,1);
-    mainLay->addWidget(saveBtn       ,1,3,1,1);
+//    mainLay->addWidget(saveBtn       ,1,3,1,1);
+    mainLay->addWidget(switchBtn       ,1,3,1,1);
 
     mainl->addStretch();
     mainl->addWidget(imgLabel);
@@ -161,6 +164,44 @@ void NCNNDlg::btnClicked(int btnID)
 
         QMessageBox::information(this, "提示", "保存成功");
     }
+    else if(btnID == 4)
+    {
+        if(m_curModel == MD_YOLO)
+        {
+            m_curModel = MD_NANODET;
+            switchBtn->setText("NanoDet");
+            delete m_ncnnModel;
+            m_ncnnModel = new NanoDet(this);
+        }
+        else if(m_curModel == MD_NANODET)
+        {
+            m_curModel = MD_PSENet;
+            switchBtn->setText("PSENet");
+            delete m_ncnnModel;
+            m_ncnnModel = new DetectorPSENet(this);
+        }
+        else if(m_curModel == MD_PSENet)
+        {
+            m_curModel = MD_ENet;
+            switchBtn->setText("ENet");
+            delete m_ncnnModel;
+            m_ncnnModel = new ENet(this);
+        }
+        else if(m_curModel == MD_ENet)
+        {
+            m_curModel = MD_DBFace;
+            switchBtn->setText("DBFace");
+            delete m_ncnnModel;
+            m_ncnnModel = new DBFace(this);
+        }
+        else if(m_curModel == MD_DBFace)
+        {
+            m_curModel = MD_YOLO;
+            switchBtn->setText("YOLO");
+            delete m_ncnnModel;
+            m_ncnnModel = new YoloV4(this);
+        }
+    }
 }
 
 #else
@@ -224,6 +265,45 @@ void NCNNDlg::btnClicked(int btnID)
         imwrite(savePath.toStdString(), outputImg);
 
         QMessageBox::information(this, "提示", "保存成功");
+    }
+    else if(btnID == 4)
+    {
+        if(m_curModel == MD_YOLO)
+        {
+            m_curModel = MD_NANODET;
+            switchBtn->setText("NanoDet");
+            delete m_ncnnModel;
+            m_ncnnModel = new NanoDet(this);
+        }
+        else if(m_curModel == MD_NANODET)
+        {
+            m_curModel = MD_PSENet;
+            switchBtn->setText("PSENet");
+            delete m_ncnnModel;
+            m_ncnnModel = new DetectorPSENet(this);
+        }
+        else if(m_curModel == MD_PSENet)
+        {
+            m_curModel = MD_ENet;
+            switchBtn->setText("ENet");
+            delete m_ncnnModel;
+            m_ncnnModel = new ENet(this);
+        }
+        else if(m_curModel == MD_ENet)
+        {
+            m_curModel = MD_DBFace;
+            switchBtn->setText("DBFace");
+            delete m_ncnnModel;
+            m_ncnnModel = new DBFace(this);
+        }
+        else if(m_curModel == MD_DBFace)
+        {
+            m_curModel = MD_YOLO;
+            switchBtn->setText("YOLO");
+            delete m_ncnnModel;
+            m_ncnnModel = new YoloV4(this);
+        }
+
     }
 }
 

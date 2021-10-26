@@ -34,6 +34,9 @@
 #include "detectorpsenet.h"
 #include "YoloV5CustomLayer.h"
 #include "YoloV4.h"
+#include "DBFace.h"
+#include "ENet.h"
+#include "NanoDet.h"
 
 #include "ncnn/net.h"
 #include "ncnn/mat.h"
@@ -42,6 +45,15 @@
 
 using namespace cv;
 using namespace std;
+
+enum Model
+{
+    MD_YOLO,
+    MD_NANODET,
+    MD_PSENet,
+    MD_ENet,
+    MD_DBFace
+};
 
 class NCNNDlg : public QDialog
 {
@@ -59,8 +71,10 @@ private:
     QPushButton* albumBtn;
     QPushButton* processBtn;
     QPushButton* saveBtn;
+    QPushButton* switchBtn;
 
     ncnnModelBase*  m_ncnnModel;
+    Model   m_curModel;
 
     Mat     outputImg;
 

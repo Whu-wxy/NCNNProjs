@@ -1,12 +1,8 @@
 #include "YoloV4.h"
 
+//yolo-fastest-opt
 YoloV4::YoloV4(QObject *parent) : ncnnModelBase("yolo-fastest-opt", parent)
 {
-//    hasGPU = ncnn::get_gpu_count() > 0;
-//    useGPU = false;
-//    toUseGPU = hasGPU && useGPU;
-
-//    net.opt.use_vulkan_compute = toUseGPU;  // gpu
 //    net.opt.use_fp16_arithmetic = true;  // fp16运算加速
 }
 
@@ -57,10 +53,6 @@ std::vector<BoxInfo> YoloV4::detect(cv::Mat & image, float threshold, float nms_
     else
         ex.set_vulkan_compute(false);
 #endif
-
-//    if (toUseGPU) {  // 消除提示
-//        ex.set_vulkan_compute(toUseGPU);
-//    }
     ex.input(0, in_net);
     std::vector<BoxInfo> result;
     ncnn::Mat blob;

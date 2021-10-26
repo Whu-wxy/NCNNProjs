@@ -35,6 +35,9 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 
 SOURCES += \
+    DBFace.cpp \
+    ENet.cpp \
+    NanoDet.cpp \
     YoloV4.cpp \
     YoloV5.cpp \
     YoloV5CustomLayer.cpp \
@@ -46,6 +49,9 @@ SOURCES += \
     ncnnmodelbase.cpp \
 
 HEADERS += \
+    DBFace.h \
+    ENet.h \
+    NanoDet.h \
     YoloV4.h \
     YoloV5.h \
     YoloV5CustomLayer.h \
@@ -65,14 +71,14 @@ QMAKE_CXXFLAGS += -fopenmp
 QMAKE_LFLAGS += -fopenmp
 LIBS += -fopenmp # -lgomp
 
-NCNN_DIR = D:/ncnn-lib/ncnn-20210720-android-vulkan-shared/armeabi-v7a
+NCNN_DIR = D:/ncnn-lib/ncnn-20210720-android/armeabi-v7a
 # D:/ncnn-lib/ncnn-20210720-android/armeabi-v7a
 # D:/ncnn-lib/android_rtti
 # D:/ncnn-lib/ncnn-20210720-android-vulkan-shared/armeabi-v7a
 LIBS += -L$$NCNN_DIR/lib -lncnn
 INCLUDEPATH += $$NCNN_DIR/include
 DEPENDPATH += $$NCNN_DIR/include
-PRE_TARGETDEPS += $$NCNN_DIR/lib/libncnn.so  # .so .a
+PRE_TARGETDEPS += $$NCNN_DIR/lib/libncnn.a  # .so .a
 
 
 ANDROID_OPENCV = D:/opencv-4.5.3-android-sdk/OpenCV-android-sdk/sdk/native
@@ -133,7 +139,7 @@ PRE_TARGETDEPS += $$PWD/../../ncnn-lib/winlib/libncnn.a
 contains(ANDROID_TARGET_ARCH,armeabi-v7a) {
     ANDROID_EXTRA_LIBS = \
         $$ANDROID_OPENCV/libs/armeabi-v7a/libopencv_java4.so \
-        $$NCNN_DIR/lib/libncnn.so
+#        $$NCNN_DIR/lib/libncnn.so
 }
 
 DISTFILES += \

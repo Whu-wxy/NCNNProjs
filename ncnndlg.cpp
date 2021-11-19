@@ -40,7 +40,7 @@ NCNNDlg::NCNNDlg(QWidget *parent)
 #endif // Q_OS_ANDROID
 
     m_curModel = MD_YOLO;
-    m_ncnnModel = new YoloV4(this);
+    m_ncnnModel = new YoloV5CustomLayer(this);
 
     QVBoxLayout* mainl = new QVBoxLayout(this);
     QGridLayout* mainLay = new QGridLayout();
@@ -199,7 +199,7 @@ void NCNNDlg::btnClicked(int btnID)
             m_curModel = MD_YOLO;
             switchBtn->setText("YOLO");
             delete m_ncnnModel;
-            m_ncnnModel = new YoloV4(this);
+            m_ncnnModel = new YoloV5CustomLayer(this);
         }
     }
 }
@@ -301,7 +301,7 @@ void NCNNDlg::btnClicked(int btnID)
             m_curModel = MD_YOLO;
             switchBtn->setText("YOLO");
             delete m_ncnnModel;
-            m_ncnnModel = new YoloV4(this);
+            m_ncnnModel = new YoloV5CustomLayer(this);
         }
 
     }

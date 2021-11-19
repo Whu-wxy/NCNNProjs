@@ -198,7 +198,7 @@ static void generate_proposals(const ncnn::Mat& cls_pred, const ncnn::Mat& dis_p
     }
 }
 
-//nanodet-ELite2_512 nanodet-m-416
+//nanodet-ELite2_512 nanodet-m-416  nanodet_m_1.5x_416_ship-opt-fp16
 NanoDet::NanoDet(QObject *parent) : ncnnModelBase("nanodet-m-416", parent)
 {
 //    blob_pool_allocator.set_size_compare_ratio(0.f);
@@ -286,7 +286,10 @@ bool NanoDet::predict(cv::Mat & frame)
 {
     double ncnnstart = ncnn::get_current_time();
     std::vector<NANOObject> objects;
+    QTime time;
+    time.start();
     detect(frame, objects, 0.4, 0.5);
+    qDebug()<<"QTime: "<<time.elapsed()<<"ms";
 //    qDebug()<<"objects: "<<objects.size();
     draw(frame, objects);
     double ncnnfinish = ncnn::get_current_time();

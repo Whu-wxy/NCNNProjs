@@ -6,6 +6,7 @@
 #define YOLOV5_H
 
 #include "ncnn/net.h"
+#include "ncnn/benchmark.h"
 
 #include "opencv2/opencv.hpp"//添加Opencv相关头文件
 #include "ncnnmodelbase.h"
@@ -42,8 +43,8 @@ public:
 
     virtual bool    predict(cv::Mat & frame);
 
-    std::vector<BoxInfo> detect(cv::Mat & image, float threshold, float nms_threshold);
-    std::vector<std::string> labels{"person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat", "traffic light",
+    std::vector<BoxInfo> detect(cv::Mat image, float threshold, float nms_threshold);
+    std::vector<QString> labels{"person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat", "traffic light",
                                     "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat", "dog", "horse", "sheep", "cow",
                                     "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella", "handbag", "tie", "suitcase", "frisbee",
                                     "skis", "snowboard", "sports ball", "kite", "baseball bat", "baseball glove", "skateboard", "surfboard",
@@ -61,10 +62,15 @@ private:
 
     int input_size = 640;
     int num_class = 80;
+//    std::vector<YoloLayerData> layers{
+//            {"517",    32, {{116, 90}, {156, 198}, {373, 326}}},
+//            {"492",    16, {{30,  61}, {62,  45},  {59,  119}}},
+//            {"output", 8,  {{10,  13}, {16,  30},  {33,  23}}},
+//    };
     std::vector<YoloLayerData> layers{
-            {"394",    32, {{116, 90}, {156, 198}, {373, 326}}},
-            {"375",    16, {{30,  61}, {62,  45},  {59,  119}}},
             {"output", 8,  {{10,  13}, {16,  30},  {33,  23}}},
+            {"492",    16, {{30,  61}, {62,  45},  {59,  119}}},
+            {"517",    32, {{116, 90}, {156, 198}, {373, 326}}},
     };
 
 public:

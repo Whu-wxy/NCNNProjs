@@ -36,7 +36,7 @@ private:
     decode_infer(ncnn::Mat &data, const yolocv::YoloSize &frame_size, int net_size, int num_classes, float threshold);
 
 //    static void nms(std::vector<BoxInfo>& result,float nms_threshold);
-    int input_size = 640 / 2;
+    int input_size = 640/* / 2*/;
     int num_class = 80;
 public:
     bool hasGPU;

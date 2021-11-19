@@ -46,7 +46,8 @@ SOURCES += \
         ncnndlg.cpp \
     imgutils.cpp \
     androidsetup.cpp \
-    ncnnmodelbase.cpp \
+    ncnnmodelbase.cpp
+#    yolotengin.cpp
 
 HEADERS += \
     DBFace.h \
@@ -126,12 +127,12 @@ LIBS += -fopenmp -lgomp
 INCLUDEPATH += D:\OpenCVMinGW3.4.1\include
 LIBS += D:\OpenCVMinGW3.4.1\bin\libopencv_*.dll
 
-LIBS += -L$$PWD/../../ncnn-lib/winlib/ -lncnn
+LIBS += -L$$PWD/../../ncnn-lib/winlib/lib/ -lncnn
 
-INCLUDEPATH += $$PWD/../../ncnn-lib/include
-DEPENDPATH += $$PWD/../../ncnn-lib/include
+INCLUDEPATH += $$PWD/../../ncnn-lib/winlib/include
+DEPENDPATH += $$PWD/../../ncnn-lib/winlib/include
 
-PRE_TARGETDEPS += $$PWD/../../ncnn-lib/winlib/libncnn.a
+PRE_TARGETDEPS += $$PWD/../../ncnn-lib/winlib/lib/libncnn.a
 }
 
 

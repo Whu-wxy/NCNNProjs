@@ -4,7 +4,7 @@
 
 #include "YoloV5.h"
 
-YoloV5::YoloV5(QObject *parent) : ncnnModelBase("yolov4-tiny-opt", parent) {
+YoloV5::YoloV5(QObject *parent) : ncnnModelBase("yolov5m-opt-fp16", parent) {
 
 }
 
@@ -14,15 +14,41 @@ YoloV5::~YoloV5() {
 
 bool YoloV5::predict(cv::Mat & frame)
 {
-    putText(frame, "hello", Point(frame.cols/2, frame.rows/2), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 255, 0), 1);
-
-//    std::vector<BoxInfo> boxes = detect(frame, 0.3, 0.7);
-//    putText(frame, to_string(boxes.size()), Point(frame.cols/2, frame.rows/2), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 255, 0), 1);
-    return false;
+    double ncnnstart = ncnn::get_current_time();
+    std::vector<BoxInfo> boxes = detect(frame, 0.25, 0.45);
+    for(BoxInfo &boxInfo: boxes)
+    {
+//        qDebug()<<"boxInfo: "<<boxInfo.x1<<", "<<boxInfo.y1<<", "<<boxInfo.x2<<", "<<boxInfo.y2;
+        rectangle(frame, Point(boxInfo.x1, boxInfo.y1), Point(boxInfo.x2, boxInfo.y2), Scalar(0, 255, 0), 2);
+//        putText(frame, labels[boxInfo.label], Point(boxInfo.x1, boxInfo.y1), FONT_HERSHEY_SIMPLEX, 5, Scalar(255, 0, 0), 5);
+    }
+    double ncnnfinish = ncnn::get_current_time();
+    double model_time = (double)(ncnnfinish - ncnnstart) / 1000;
+    putText(frame, to_string(model_time), Point(frame.cols/2, frame.rows/2), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 255, 0), 1);
+    return true;
 }
 
-std::vector<BoxInfo> YoloV5::detect(cv::Mat & image, float threshold, float nms_threshold) {
-    ncnn::Mat in_net = ncnn::Mat::from_pixels(image.data, ncnn::Mat::PIXEL_BGR2RGB, input_size/2, input_size/2);
+std::vector<BoxInfo> YoloV5::detect(cv::Mat image, float threshold, float nms_threshold)
+{
+    // letterbox pad to multiple of 32
+    int w = image.cols;
+    int h = image.rows;
+    int width = w;
+    int height = h;
+    float scale = 1.f;
+    // 长边缩放到input_size
+    if (w > h) {
+        scale = (float) input_size / w;
+        w = input_size;
+        h = h * scale;
+    } else {
+        scale = (float) input_size / h;
+        h = input_size;
+        w = w * scale;
+    }
+
+    resize(image, image, Size(w, h));
+    ncnn::Mat in_net = ncnn::Mat::from_pixels(image.data, ncnn::Mat::PIXEL_BGR2RGB, w, h);
 
     float norm[3] = {1 / 255.f, 1 / 255.f, 1 / 255.f};
     float mean[3] = {0, 0, 0};
@@ -38,11 +64,18 @@ std::vector<BoxInfo> YoloV5::detect(cv::Mat & image, float threshold, float nms_
     for (const auto &layer: layers) {
         ncnn::Mat blob;
         ex.extract(layer.name.c_str(), blob);
-        auto boxes = decode_infer(blob, layer.stride, {(int) image.cols, (int) image.rows}, input_size,
+        auto boxes = decode_infer(blob, layer.stride, {width, height}, input_size,
                                   num_class, layer.anchors, threshold);
         result.insert(result.begin(), boxes.begin(), boxes.end());
     }
+
+    qDebug()<<"proposals: "<<result.size();
+
     nms(result, nms_threshold);
+    for(BoxInfo& info: result)
+    {
+        qDebug()<<"label: "<<labels[info.label];
+    }
     return result;
 }
 

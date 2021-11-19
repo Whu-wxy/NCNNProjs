@@ -40,8 +40,6 @@ std::vector<Obj> DBFace::detect(cv::Mat & image, double threshold, double nms_th
 {
     // 图像缩放
     cv::Mat im = pad(image);
-    ncnn::Mat in_net = ncnn::Mat::from_pixels(image.data, ncnn::Mat::PIXEL_BGR2RGB, image.cols, image.rows);
-
     ncnn::Mat in = ncnn::Mat::from_pixels(im.data, ncnn::Mat::PIXEL_BGR2RGB, im.cols, im.rows);
     const float mean_vals_1[3] = {0.485f * 255.0f, 0.456f * 255.0f, 0.406f * 255.0f};
     const float norm_vals_1[3] = {1.0f / 0.229f / 255.0f, 1.0f / 0.224f / 255.0f, 1.0f / 0.225f / 255.0f};

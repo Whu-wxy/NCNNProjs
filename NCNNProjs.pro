@@ -72,17 +72,17 @@ QMAKE_CXXFLAGS += -fopenmp
 QMAKE_LFLAGS += -fopenmp
 LIBS += -fopenmp # -lgomp
 
-NCNN_DIR = D:/ncnn-lib/ncnn-20210720-android/armeabi-v7a
+NCNN_DIR = $$PWD/ncnn-20210720-android-vulkan-shared\armeabi-v7a
 # D:/ncnn-lib/ncnn-20210720-android/armeabi-v7a
 # D:/ncnn-lib/android_rtti
 # D:/ncnn-lib/ncnn-20210720-android-vulkan-shared/armeabi-v7a
 LIBS += -L$$NCNN_DIR/lib -lncnn
 INCLUDEPATH += $$NCNN_DIR/include
 DEPENDPATH += $$NCNN_DIR/include
-PRE_TARGETDEPS += $$NCNN_DIR/lib/libncnn.a  # .so .a
+PRE_TARGETDEPS += $$NCNN_DIR/lib/libncnn.so  # .so .a
 
 
-ANDROID_OPENCV = D:/opencv-4.5.3-android-sdk/OpenCV-android-sdk/sdk/native
+ANDROID_OPENCV = $$PWD/opencv-4.5.3-android-sdk/OpenCV-android-sdk/sdk/native
 # D:/ncnn-lib/opencv-mobile-4.5.3-android/sdk/native
 # D:/opencv-4.5.3-android-sdk/OpenCV-android-sdk/sdk/native
 # D:/OpenCV-android-sdk/sdk/native (gcc)
@@ -108,8 +108,8 @@ $$ANDROID_OPENCV/3rdparty/libs/armeabi-v7a/liblibjpeg-turbo.a \
 #$$ANDROID_OPENCV/staticlibs/armeabi-v7a/libopencv_core.a
 
 #  psenet_lite_mbv2  yolov4-tiny-opt yolo-fastest-opt MobileNetV2-YOLOv3-Nano-coco
-data.files += src/yolo-fastest-opt.bin
-data.files += src/yolo-fastest-opt.param
+data.files += src/yolov5s_ship1w-opt-fp16.bin
+data.files += src/yolov5s_ship1w-opt-fp16.param
 data.files += src/test.jpg
 data.path = /assets/dst/
 INSTALLS += data
@@ -140,7 +140,7 @@ PRE_TARGETDEPS += $$PWD/../../ncnn-lib/winlib/lib/libncnn.a
 contains(ANDROID_TARGET_ARCH,armeabi-v7a) {
     ANDROID_EXTRA_LIBS = \
         $$ANDROID_OPENCV/libs/armeabi-v7a/libopencv_java4.so \
-#        $$NCNN_DIR/lib/libncnn.so
+        $$NCNN_DIR/lib/libncnn.so
 }
 
 DISTFILES += \

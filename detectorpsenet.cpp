@@ -43,10 +43,10 @@ bool DetectorPSENet::predict(Mat & frame)
     if(ncnn::get_gpu_count() > 0)
     {
         net.set_vulkan_device(0);
-        ex.set_vulkan_compute(true);
+        extractor.set_vulkan_compute(true);
     }
     else
-        ex.set_vulkan_compute(false);
+        extractor.set_vulkan_compute(false);
 #endif
     // Android涓敤clock()璁℃椂涓嶅噯纭紝瑕佺敤ncnn::get_current_time()
     double ncnnstart = ncnn::get_current_time();

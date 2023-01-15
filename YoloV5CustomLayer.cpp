@@ -299,7 +299,7 @@ void generate_proposals(const ncnn::Mat &anchors, int stride,
 
 
 YoloV5CustomLayer::YoloV5CustomLayer(QObject *parent)
-    : ncnnModelBase("yolov5n-opt-fp16", parent)
+    : ncnnModelBase("yolov5s_ship1w-opt-fp16", parent)
 {
 //        // opt 需要在加载前设置
 //        Net->opt.use_vulkan_compute = toUseGPU;  // gpu
@@ -474,6 +474,16 @@ std::vector<YoloObject> YoloV5CustomLayer::detect(cv::Mat image, float threshold
     auto ex = net.create_extractor();
     ex.set_light_mode(true);
     ex.set_num_threads(4);
+#if NCNN_VULKAN
+    qDebug()<<"gpu count: "<<ncnn::get_gpu_count();
+    if(ncnn::get_gpu_count() > 0)
+    {
+        net.set_vulkan_device(0);
+        ex.set_vulkan_compute(true);
+    }
+    else
+        ex.set_vulkan_compute(false);
+#endif
     ex.input("images", in_net);
 
     std::vector<YoloObject> proposals;

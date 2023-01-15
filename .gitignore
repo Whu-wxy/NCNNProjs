@@ -43,3 +43,6 @@ target_wrapper.*
 CMakeLists.txt.user*
 
 /src
+/android
+/ncnn-20210720-android-vulkan-shared
+/opencv-4.5.3-android-sdk

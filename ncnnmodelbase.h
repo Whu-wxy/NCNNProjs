@@ -23,7 +23,7 @@ public:
     ~ncnnModelBase();
 
 public:
-    virtual bool    predict(cv::Mat & frame) = 0;
+    virtual bool    predict(cv::Mat & frame){return false; }
     bool    load(QString baseDir, QString modelName);
     bool    load(QString modelPath);
     void    unload();
